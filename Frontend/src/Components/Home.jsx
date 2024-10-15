@@ -1,17 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { Box, Button, Card, CardMedia, CardContent, Typography, LinearProgress, Grid, Container } from '@mui/material';
-import Carousel from 'react-material-ui-carousel';
+import { Box, Button, Card, CardMedia, CardContent, Typography, Grid, Container } from '@mui/material';
 
 function Home() {
   const [campgrounds, setCampgrounds] = useState([]);
   const [error, setError] = useState(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/campgrounds');
+        const response = await axios.get('http://localhost:3000/campgrounds'); // Adjust API endpoint
         setCampgrounds(response.data.campgrounds);
       } catch (err) {
         setError(err.message);
@@ -20,23 +18,10 @@ function Home() {
     fetchData();
   }, []);
 
-  // Handle scroll progress for the linear progress bar
-  const handleScroll = useCallback(() => {
-    const progress = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-    setScrollProgress(progress);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [handleScroll]);
-
-  // Truncate description to 50 words
+  // Truncate description to 10 words to keep card content concise
   const truncateDescription = (description) => {
     const words = description.split(' ');
-    return words.length > 10 ? words.slice(0, 50).join(' ') + '...' : description;
+    return words.length > 10 ? words.slice(0, 10).join(' ') + '...' : description;
   };
 
   return (
@@ -45,69 +30,56 @@ function Home() {
         Campground List
       </Typography>
 
-      <Grid container spacing={3} justifyContent="center" direction="row"> {/* Center cards */}
+      <Grid container spacing={3} justifyContent="center">
         {campgrounds.map((campground) => (
-          <Grid item xs={12} sm={6} md={6} key={campground._id}> {/* Responsive card layout */}
+          <Grid item xs={12} key={campground._id}> {/* Always full width on all screen sizes */}
             <Card 
               sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 marginBottom: '20px', 
                 width: '100%', 
-                maxWidth: '600px', // Fixed width for the card
-                height: '500px' // Fixed height for equal size
+                maxWidth: '800px', // Set a max width for the card
+                margin: '0 auto',  // Center-align the card
+                height: '450px'  // Adjust height for consistent layout
               }}
             >
               {campground.images && campground.images.length > 0 ? (
-                <Carousel>
-                  {campground.images.map((image, index) => (
-                    <CardMedia
-                      key={index}
-                      component="img"
-                      sx={{
-                        height: '300px',  // Fixed height for images
-                        objectFit: 'cover' // Maintain aspect ratio
-                      }}
-                      image={image.url}
-                      alt={`Image of ${campground.title}`}
-                    />
-                  ))}
-                </Carousel>
+                <CardMedia
+                  component="img"
+                  sx={{
+                    height: '250px',  // Set a fixed height for the images
+                    objectFit: 'cover'
+                  }}
+                  image={campground.images[0].url} // First image from the images array
+                  alt={`Image of ${campground.title}`}
+                />
               ) : (
                 <CardMedia
                   component="img"
                   sx={{
-                    height: '300px',  // Fixed height for images
-                    objectFit: 'cover' // Maintain aspect ratio
+                    height: '250px',  // Set a fixed height for the placeholder image
+                    objectFit: 'cover'
                   }}
                   image="https://images.unsplash.com/photo-1458668383970-8ddd3927deed?q=80&w=2067&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                   alt={`Default image for ${campground.title}`}
                 />
               )}
-              <CardContent sx={{ flexGrow: 1 }}> {/* Ensure CardContent grows to fill space */}
+              <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="h5" component="div" gutterBottom>
                   {campground.title}
                 </Typography>
-                
                 <Typography variant="body2" color="textSecondary">
-                  {truncateDescription(campground.description)} {/* Show truncated description */}
+                  {truncateDescription(campground.description)} {/* Short description */}
                 </Typography>
-
-                <Typography variant="subtitle1">
-                  <strong>Location:</strong> {campground.location}
+                <Typography variant="subtitle1" color="textSecondary">
+                  {campground.location}
                 </Typography>
-                <Typography variant="subtitle1">
-                  <strong>Price:</strong> ${campground.price}
-                </Typography>
-                <Typography variant="subtitle1">
-                  <strong>Author ID:</strong> {campground.author}
-                </Typography>
-                <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push button down */}
                 <Button
                   variant="contained"
                   color="primary"
                   href={`/campgrounds/${campground._id}`}
-                  style={{ marginTop: '10px' }}
+                  sx={{ marginTop: '10px' }}
                 >
                   View {campground.title}
                 </Button>
@@ -116,11 +88,8 @@ function Home() {
           </Grid>
         ))}
       </Grid>
-
-      <LinearProgress variant="determinate" value={scrollProgress} style={{ marginTop: '20px' }} />
     </Container>
   );
 }
 
 export default Home;
-
